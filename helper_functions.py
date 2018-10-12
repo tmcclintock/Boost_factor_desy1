@@ -3,13 +3,13 @@ import numpy as np
 y1boostbase    = "data/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
 y1boostcovbase = "data/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
 
-def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, alldata=False, diag_only=False):
+def get_boost_data_and_cov(zi, lj, lowcut=0.1, highcut=999, alldata=False, diag_only=False):
     """
     Args:
         zi: z-index
         lj: lambda-index
-        lowcut: lower radii cut in Mpc physical. Default is 0.2 Mpc (200 kpc)
-        highcut: upper radii cut in Mpc physical. Default is 1 Gpc (essentially no cut at all)
+        lowcut: lower radii cut in Mpc physical 
+        highcut: upper radii cut in Mpc physical
         alldata: return everything without scale cuts
         diag_only: return a diagonal covariance matrix
     """
@@ -19,7 +19,7 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, alldata=False, d
     Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True) #Radii, boost+1, error
 
     #Cut out bad data, always make this cut
-    indices = Be > 1e-8 #errors go to 0 if the data is bad
+    indices = np.fabs(Be) > 1e-6 #errors go to 0 if the data is bad
     Bp1 = Bp1[indices]
     Rb  = Rb[indices]
     Be  = Be[indices]
