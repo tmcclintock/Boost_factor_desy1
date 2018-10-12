@@ -1,0 +1,1 @@
+This directory contains all of the DES Y1 boost factor profiles and covariance matrices used in the Y1 cluster lensing analysis.
