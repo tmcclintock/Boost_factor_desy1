@@ -3,7 +3,7 @@ import numpy as np
 y1boostbase    = "data/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
 y1boostcovbase = "data/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
 
-def get_boost_data_and_cov(zi, lj, lowcut=0.1, highcut=999, alldata=False, diag_only=False):
+def get_boost_data_and_cov(zi, lj, lowcut=0.2, highcut=999, alldata=False, diag_only=False):
     """
     Args:
         zi: z-index

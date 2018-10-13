@@ -4,6 +4,19 @@ from helper_functions import *
 import cluster_toolkit as ct
 import os, sys
 
+"""
+class boost_analysis(object):
+    def __init__(self, zi, lj, name, model_name):
+        Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=False, diag_only=False)
+        Rb_all, Bp1_all, iBcov_all, Bcov_all = get_boost_data_and_cov(i, j, alldata=True, diag_only=False)
+        Bcov_diag = np.diag(Bcov.diagonal())
+        iBcov_diag = np.linalg.inv(Bcov_diag)
+        args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'model_name':model_name, 'name':name, "z":z, 'R_all':R_all, 'Bp1_all':Bp1_all, 'iBcov_all':iBcov_all, 'Bcov_all':Bcov_all, 'Bcov_diag':Bcov_diag, 'iBcov_diag':iBcov_diag}
+        for key in args:
+            setattr(self, key, args[key])
+"""
+
+
 #Guesses for the model starts
 def starts(name):
     if   name == 'nfw': return [0.5, 1.0]
@@ -32,13 +45,20 @@ def do_best_fit(args, bfpath):
 def plot_bf(args, bfpath, show=False):
     import matplotlib.pyplot as plt
     import model as mod
-    guess = np.loadtxt(bfpath)
     i, j= args['zi'], args['lj']
-    Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=False)
-    args['Rb'] = Rb
+    R, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=True)
+    args['R'] = R
+    plt.errorbar(R, Bp1-1, np.sqrt(Bcov.diagonal()))
+
+    guess = np.loadtxt(bfpath)
     boost = mod.get_boost_model(guess, args)
-    plt.plot(Rb, boost-1, label="%s model"%args['model_name'])
-    plt.errorbar(Rb, Bp1-1, np.sqrt(Bcov.diagonal()))
+    plt.plot(R, boost-1, label="%s model"%args['model_name'])
+
+    if bfpath2 is not None:
+        guess = np.loadtxt(bfpath2)
+        boost = mod.get_boost_model(guess, args)
+        plt.plot(R, boost-1, label="%s model - diag_only"%args['model_name'])
+
     plt.legend()
     plt.xscale('log')
     #plt.yscale('log')
@@ -81,21 +101,30 @@ if __name__ == "__main__":
     bfbase = "bestfits/bf_boost_%s_%s"%(name, model_name)
     chainbase = "chains/chain_boost_%s_%s"%(name, model_name)
     likesbase = "chains/likes_boost_%s_%s"%(name, model_name)
+
+    zs = np.loadtxt("data/Y1_meanz.txt")
     
     Nz, Nl = 3, 7
-    for i in xrange(1, 0, -1):
+    for i in xrange(2, 1, -1):
         for j in xrange(6, 5, -1):
+            z = zs[i,j]
             bfpath = bfbase+"_z%d_l%d.txt"%(i, j)
+            bfpath_diag = bfbase+"_diag_z%d_l%d.txt"%(i, j)
+
             chainpath = chainbase+"_z%d_l%d"%(i, j)
             likespath = likesbase+"_z%d_l%d"%(i, j)
             
             print "Working at z%d l%d"%(i, j)
             Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=False, diag_only=False)
-            args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'model_name':model_name, 'name':name}
+            args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'model_name':model_name, 'name':name, "z":z, "h":0.7}
             
             test_call(args)
             do_best_fit(args, bfpath)
-            plot_bf(args, bfpath, show=False)
 
-            #do_mcmc(args, bfpath, chainpath, likespath)
-            #view_chain(i,j,chainpath, show=False)
+            #Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=False, diag_only=True)
+            #args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'model_name':model_name, 'name':name, "z":z, "h":0.7}
+            #do_best_fit(args, bfpath_diag)
+            #plot_bf(args, bfpath, bfpath_diag, show=False)
+
+            do_mcmc(args, bfpath, chainpath, likespath)
+            view_chain(i,j,chainpath, show=False)
