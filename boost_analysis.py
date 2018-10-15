@@ -3,18 +3,9 @@ from likelihoods import *
 from helper_functions import *
 import cluster_toolkit as ct
 import os, sys
-
-"""
-class boost_analysis(object):
-    def __init__(self, zi, lj, name, model_name):
-        Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=False, diag_only=False)
-        Rb_all, Bp1_all, iBcov_all, Bcov_all = get_boost_data_and_cov(i, j, alldata=True, diag_only=False)
-        Bcov_diag = np.diag(Bcov.diagonal())
-        iBcov_diag = np.linalg.inv(Bcov_diag)
-        args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'model_name':model_name, 'name':name, "z":z, 'R_all':R_all, 'Bp1_all':Bp1_all, 'iBcov_all':iBcov_all, 'Bcov_all':Bcov_all, 'Bcov_diag':Bcov_diag, 'iBcov_diag':iBcov_diag}
-        for key in args:
-            setattr(self, key, args[key])
-"""
+import matplotlib.pyplot as plt
+plt.rc("text", usetex=True)
+plt.rc("font", size=14, family='serif')
 
 
 #Guesses for the model starts
@@ -42,28 +33,30 @@ def do_best_fit(args, bfpath):
     np.savetxt(bfpath, result['x'])
     return
 
-def plot_bf(args, bfpath, show=False):
+def plot_bf(args, bfpath, bfpath2=None, show=False):
     import matplotlib.pyplot as plt
     import model as mod
     i, j= args['zi'], args['lj']
-    R, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=True)
+    R, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=False)
     args['R'] = R
-    plt.errorbar(R, Bp1-1, np.sqrt(Bcov.diagonal()))
+    plt.errorbar(R, Bp1, np.sqrt(Bcov.diagonal()))
 
     guess = np.loadtxt(bfpath)
     boost = mod.get_boost_model(guess, args)
-    plt.plot(R, boost-1, label="%s model"%args['model_name'])
+    plt.plot(R, boost, label="%s model"%args['model_name'])
 
     if bfpath2 is not None:
         guess = np.loadtxt(bfpath2)
         boost = mod.get_boost_model(guess, args)
-        plt.plot(R, boost-1, label="%s model - diag_only"%args['model_name'])
+        plt.plot(R, boost, label="%s model - diag only"%args['model_name'])
 
     plt.legend()
     plt.xscale('log')
     #plt.yscale('log')
     plt.title("z%d l%d"%(i,j))
-    plt.gcf().savefig("figures/boost_%s_%s_z%d_l%d.png"%(args['name'], args['model_name'],i,j))
+    plt.xlabel(r"$R\ [{\rm Mpc}]$")
+    plt.ylabel(r"$\mathcal{B}(R)$")
+    plt.gcf().savefig("figures/boost_%s_%s_z%d_l%d.png"%(args['name'], args['model_name'],i,j), dpi=300)
     if show:
         plt.show()
     plt.clf()
@@ -92,6 +85,18 @@ def view_chain(zi,lj,chainpath,show=False):
         plt.show()
     plt.clf()
 
+def make_tamas_data(args, bfpath):
+    import model as mod
+    i, j= args['zi'], args['lj']
+    Rm = np.logspace(-1,np.log10(30), num=100)
+    guess = np.loadtxt(bfpath)
+    args['Rb'] = Rm
+    boost = mod.get_boost_model(guess, args)
+    print(Rm.shape, boost.shape)
+    header = "R[Mpc; physical]; (1-f_{\rm cl})^{-1}"
+    fmt = "%.3f %.4e"
+    np.savetxt("tamas_files/boost_l%d_z%d.txt"%(j,i), np.array([Rm,boost]).T, header=header, fmt=fmt)
+
 if __name__ == "__main__":
     name = 'y1'
     model_name = "nfw"
@@ -105,8 +110,8 @@ if __name__ == "__main__":
     zs = np.loadtxt("data/Y1_meanz.txt")
     
     Nz, Nl = 3, 7
-    for i in xrange(2, 1, -1):
-        for j in xrange(6, 5, -1):
+    for i in xrange(2, -1, -1):
+        for j in xrange(6, 2, -1):
             z = zs[i,j]
             bfpath = bfbase+"_z%d_l%d.txt"%(i, j)
             bfpath_diag = bfbase+"_diag_z%d_l%d.txt"%(i, j)
@@ -124,7 +129,10 @@ if __name__ == "__main__":
             #Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, alldata=False, diag_only=True)
             #args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'model_name':model_name, 'name':name, "z":z, "h":0.7}
             #do_best_fit(args, bfpath_diag)
+
+            make_tamas_data(args, bfpath)
+            
             #plot_bf(args, bfpath, bfpath_diag, show=False)
 
-            do_mcmc(args, bfpath, chainpath, likespath)
-            view_chain(i,j,chainpath, show=False)
+            #do_mcmc(args, bfpath, chainpath, likespath)
+            #view_chain(i,j,chainpath, show=False)
