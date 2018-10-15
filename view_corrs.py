@@ -5,9 +5,15 @@ import matplotlib
 
 extent = np.log10([0.0323, 30, 0.0323, 30])
 
-for i in xrange(0,3):
-    for j in xrange(3,7):
+for i in xrange(2,3):
+    for j in xrange(6,7):
         Rb, Bp1, icov, cov = hf.get_boost_data_and_cov(i, j, alldata=False, diag_only=False)
+        w,v = np.linalg.eig(cov)
+        print w
+        print np.max(w)/np.min(w)
+        exit()
+
+        
         D = np.diag(np.sqrt(cov.diagonal()))
         Di = np.linalg.inv(D)
         corr = np.dot(Di, np.dot(cov, Di))

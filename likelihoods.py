@@ -11,7 +11,7 @@ def lnprior(params, args):
     #Boost amplitude can't be negative
     #Scale radius can't be insanely large
     #Boost amplitude can't be insanely large
-    if Rs <=0.0 or Rs > 100: return -np.inf
+    if Rs <=0.0 or Rs > 10: return -np.inf
     if B0 < 0.00 or B0 > 100:return -np.inf
     #No issue
     #Replace this return statement if we get meaninful priors
