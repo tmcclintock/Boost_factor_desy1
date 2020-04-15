@@ -91,7 +91,10 @@ def make_tamas_data(args, bfpath):
     import model as mod
     i, j= args['zi'], args['lj']
     Rm = np.logspace(-1,np.log10(30), num=100)
-    guess = np.loadtxt(bfpath)
+    #guess = np.loadtxt(bfpath)
+    guess = np.loadtxt("../WLY1_DES_FIGURES/chains2/chains/chain_full_y1_SAC_z2_l6.txt")
+    guess = np.mean(guess,0)[-2:]
+
     args['Rb'] = Rm
     boost = mod.get_boost_model(guess, args)
     print(Rm.shape, boost.shape)
@@ -112,8 +115,8 @@ if __name__ == "__main__":
     zs = np.loadtxt("data/Y1_meanz.txt")
     
     Nz, Nl = 3, 7
-    for i in xrange(2, -1, -1):
-        for j in xrange(6, 2, -1):
+    for i in xrange(2, 1, -1):
+        for j in xrange(6, 5, -1):
             z = zs[i,j]
             bfpath = bfbase+"_z%d_l%d.txt"%(i, j)
             bfpath_diag = bfbase+"_diag_z%d_l%d.txt"%(i, j)
@@ -132,9 +135,9 @@ if __name__ == "__main__":
             #args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'model_name':model_name, 'name':name, "z":z, "h":0.7}
             #do_best_fit(args, bfpath_diag)
 
-            #make_tamas_data(args, bfpath)
+            make_tamas_data(args, bfpath)
             
-            plot_bf(args, bfpath, bfpath_diag, show=False)
+            #plot_bf(args, bfpath, bfpath_diag, show=False)
 
             #do_mcmc(args, bfpath, chainpath, likespath)
             #view_chain(i,j,chainpath, show=False)
